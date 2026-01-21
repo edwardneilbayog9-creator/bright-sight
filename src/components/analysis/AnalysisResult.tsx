@@ -1,8 +1,8 @@
-import { AlertCircle, CheckCircle, Info, TrendingUp, Target } from 'lucide-react';
+import { AlertCircle, CheckCircle, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { DiseaseType, DISEASE_INFO, MODEL_PERFORMANCE } from '@/types';
+import { DiseaseType, DISEASE_INFO } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface AnalysisResultProps {
@@ -12,7 +12,6 @@ interface AnalysisResultProps {
 
 export function AnalysisResult({ classification, confidence }: AnalysisResultProps) {
   const diseaseInfo = DISEASE_INFO[classification];
-  const modelPerf = MODEL_PERFORMANCE[classification];
   const confidencePercent = confidence * 100;
 
   const getSeverityColor = () => {
@@ -48,59 +47,20 @@ export function AnalysisResult({ classification, confidence }: AnalysisResultPro
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Confidence Meter */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Confidence Level
-                </span>
-                <span className={cn('text-2xl font-bold', getConfidenceColor())}>
-                  {confidencePercent.toFixed(1)}%
-                </span>
-              </div>
-              <Progress value={confidencePercent} className="h-3" />
-              <div className="flex justify-between mt-1">
-                <span className="text-xs text-muted-foreground">Low</span>
-                <span className="text-xs text-muted-foreground">High</span>
-              </div>
+          {/* Confidence Meter */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-muted-foreground">
+                Confidence Level
+              </span>
+              <span className={cn('text-2xl font-bold', getConfidenceColor())}>
+                {confidencePercent.toFixed(1)}%
+              </span>
             </div>
-
-            {/* Quick Stats */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Model</p>
-                  <p className="text-sm font-medium">ViT-Base-16</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted">
-                <Target className="w-4 h-4 text-primary" />
-                <div>
-                  <p className="text-xs text-muted-foreground">F1 Score</p>
-                  <p className="text-sm font-medium">{(modelPerf.f1Score * 100).toFixed(0)}%</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Model Performance for this class */}
-          <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
-            <p className="text-xs font-medium text-foreground mb-2">Model Performance for {diseaseInfo.name}</p>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text-lg font-bold text-primary">{(modelPerf.precision * 100).toFixed(0)}%</p>
-                <p className="text-xs text-muted-foreground">Precision</p>
-              </div>
-              <div>
-                <p className="text-lg font-bold text-primary">{(modelPerf.recall * 100).toFixed(0)}%</p>
-                <p className="text-xs text-muted-foreground">Recall</p>
-              </div>
-              <div>
-                <p className="text-lg font-bold text-primary">{(modelPerf.f1Score * 100).toFixed(0)}%</p>
-                <p className="text-xs text-muted-foreground">F1 Score</p>
-              </div>
+            <Progress value={confidencePercent} className="h-3" />
+            <div className="flex justify-between mt-1">
+              <span className="text-xs text-muted-foreground">Low</span>
+              <span className="text-xs text-muted-foreground">High</span>
             </div>
           </div>
         </CardContent>

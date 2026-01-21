@@ -36,8 +36,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Sidebar */}
-      <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
+      {/* Sidebar - hidden on print */}
+      <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col print:hidden">
         {/* Logo */}
         <div className="p-6 border-b border-sidebar-border">
           <Link to="/dashboard" className="flex items-center gap-3">
@@ -104,8 +104,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
+      {/* Main Content - full width on print */}
+      <main className="flex-1 overflow-auto print:w-full">
         {children}
       </main>
     </div>

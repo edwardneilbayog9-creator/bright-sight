@@ -45,8 +45,16 @@ export default function DetectionDetail() {
   return (
     <DashboardLayout>
       <div className="p-6 lg:p-8 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Print-only header */}
+        <div className="hidden print:block mb-6 text-center border-b border-border pb-4">
+          <h1 className="text-2xl font-bold text-foreground">EyeCare AI Pre-Diagnosis Report</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
+          </p>
+        </div>
+
+        {/* Header - hidden on print */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 print:hidden">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-5 h-5" />

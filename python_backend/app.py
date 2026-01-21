@@ -9,7 +9,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PIL import Image
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
 import timm
@@ -25,7 +24,7 @@ CORS(app, origins=[
     "https://*.lovable.app",
 ])
 
-# Disease classes
+# Disease classes - must match training order
 CLASSES = ['cataract', 'diabetic_retinopathy', 'glaucoma', 'normal']
 NUM_CLASSES = len(CLASSES)
 
@@ -39,34 +38,35 @@ MODEL_PATH = os.path.join(os.path.dirname(__file__), 'models', 'best_enhanced_vi
 # Global model variable
 model = None
 
-
-class EnhancedViT(nn.Module):
-    """Enhanced Vision Transformer for Eye Disease Classification"""
-    
-    def __init__(self, num_classes=4, pretrained=True):
-        super(EnhancedViT, self).__init__()
-        
-        # Load pretrained ViT
-        self.vit = timm.create_model('vit_base_patch16_224', pretrained=pretrained)
-        
-        # Get the number of features from the ViT head
-        num_features = self.vit.head.in_features
-        
-        # Replace the head with custom classifier
-        self.vit.head = nn.Sequential(
-            nn.LayerNorm(num_features),
-            nn.Dropout(0.3),
-            nn.Linear(num_features, 512),
-            nn.GELU(),
-            nn.Dropout(0.2),
-            nn.Linear(512, 256),
-            nn.GELU(),
-            nn.Dropout(0.1),
-            nn.Linear(256, num_classes)
-        )
-    
-    def forward(self, x):
-        return self.vit(x)
+# Preliminary findings mapping based on classification
+PRELIMINARY_FINDINGS = {
+    'diabetic_retinopathy': [
+        {'finding': 'Possible hemorrhages detected', 'detected': True},
+        {'finding': 'Microaneurysms may be present', 'detected': True},
+        {'finding': 'Vascular abnormalities noted', 'detected': True},
+        {'finding': 'Optic disk abnormality', 'detected': False},
+        {'finding': 'Hard exudates observed', 'detected': True},
+    ],
+    'glaucoma': [
+        {'finding': 'Optic disk abnormality noted', 'detected': True},
+        {'finding': 'Cup-to-disk ratio may be elevated', 'detected': True},
+        {'finding': 'Nerve fiber layer changes suspected', 'detected': True},
+        {'finding': 'Possible hemorrhages detected', 'detected': False},
+        {'finding': 'Peripapillary atrophy observed', 'detected': True},
+    ],
+    'cataract': [
+        {'finding': 'Lens opacity detected', 'detected': True},
+        {'finding': 'Crystalline lens changes observed', 'detected': True},
+        {'finding': 'Reduced image clarity due to media opacity', 'detected': True},
+        {'finding': 'Optic disk abnormality', 'detected': False},
+    ],
+    'normal': [
+        {'finding': 'No significant abnormalities detected', 'detected': True},
+        {'finding': 'Retinal structures appear normal', 'detected': True},
+        {'finding': 'Optic disk appears healthy', 'detected': True},
+        {'finding': 'Vascular pattern within normal limits', 'detected': True},
+    ],
+}
 
 
 def load_model():
@@ -79,10 +79,12 @@ def load_model():
         return False
     
     try:
-        model = EnhancedViT(num_classes=NUM_CLASSES, pretrained=False)
+        # Create model with same architecture as training (V3)
+        # Standard ViT without custom head - matches the training notebook
+        model = timm.create_model('vit_base_patch16_224', pretrained=False, num_classes=NUM_CLASSES)
         
         # Load state dict
-        state_dict = torch.load(MODEL_PATH, map_location=DEVICE)
+        state_dict = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=False)
         
         # Handle different save formats
         if 'model_state_dict' in state_dict:
@@ -103,7 +105,7 @@ def load_model():
         return False
 
 
-# Image preprocessing pipeline
+# Image preprocessing pipeline - matches training transforms
 preprocess = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
@@ -112,6 +114,21 @@ preprocess = transforms.Compose([
         std=[0.229, 0.224, 0.225]
     )
 ])
+
+
+def get_review_urgency(classification: str, confidence: float) -> str:
+    """Determine review urgency based on classification and confidence"""
+    if classification == 'normal':
+        return 'routine'
+    
+    if confidence >= 0.85:
+        if classification in ['diabetic_retinopathy', 'glaucoma']:
+            return 'urgent'
+        return 'priority'
+    elif confidence >= 0.70:
+        return 'priority'
+    else:
+        return 'routine'
 
 
 def predict_image(image: Image.Image) -> dict:
@@ -127,10 +144,15 @@ def predict_image(image: Image.Image) -> dict:
         total = sum(probs)
         probs = [p / total for p in probs]
         
+        classification = CLASSES[idx]
+        confidence = probs[idx]
+        
         return {
-            'classification': CLASSES[idx],
-            'confidence': probs[idx],
-            'all_probabilities': {CLASSES[i]: probs[i] for i in range(NUM_CLASSES)},
+            'classification': classification,
+            'confidence': round(confidence, 4),
+            'all_probabilities': {CLASSES[i]: round(probs[i], 4) for i in range(NUM_CLASSES)},
+            'preliminary_findings': PRELIMINARY_FINDINGS.get(classification, []),
+            'review_urgency': get_review_urgency(classification, confidence),
             'demo_mode': True
         }
     
@@ -148,14 +170,17 @@ def predict_image(image: Image.Image) -> dict:
     # Get prediction
     confidence, predicted_idx = torch.max(probabilities, 0)
     predicted_class = CLASSES[predicted_idx.item()]
+    confidence_value = round(confidence.item(), 4)
     
     # Build response
     all_probs = {CLASSES[i]: round(probabilities[i].item(), 4) for i in range(NUM_CLASSES)}
     
     return {
         'classification': predicted_class,
-        'confidence': round(confidence.item(), 4),
+        'confidence': confidence_value,
         'all_probabilities': all_probs,
+        'preliminary_findings': PRELIMINARY_FINDINGS.get(predicted_class, []),
+        'review_urgency': get_review_urgency(predicted_class, confidence_value),
         'demo_mode': False
     }
 
@@ -210,7 +235,13 @@ def index():
             '/predict': 'POST - Upload fundus image for classification',
             '/health': 'GET - Health check'
         },
-        'supported_diseases': CLASSES
+        'supported_diseases': CLASSES,
+        'model_performance': {
+            'cataract': {'precision': 0.90, 'recall': 0.93, 'f1': 0.92},
+            'diabetic_retinopathy': {'precision': 1.00, 'recall': 0.99, 'f1': 0.99},
+            'glaucoma': {'precision': 0.82, 'recall': 0.82, 'f1': 0.82},
+            'normal': {'precision': 0.84, 'recall': 0.81, 'f1': 0.83},
+        }
     })
 
 

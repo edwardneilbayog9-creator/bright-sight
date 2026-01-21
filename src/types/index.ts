@@ -6,6 +6,13 @@ export interface User {
   createdAt: string;
 }
 
+export interface PreliminaryFinding {
+  id: string;
+  finding: string;
+  detected: boolean;
+  confidence: 'high' | 'medium' | 'low';
+}
+
 export interface Detection {
   id: string;
   userId: string;
@@ -19,6 +26,9 @@ export interface Detection {
   remarks: string;
   doctorReview: DoctorReview | null;
   status: 'pending' | 'analyzed' | 'reviewed';
+  preliminaryFindings?: PreliminaryFinding[];
+  allProbabilities?: Record<DiseaseType, number>;
+  reviewUrgency?: 'routine' | 'priority' | 'urgent';
   createdAt: string;
   updatedAt: string;
 }
@@ -42,6 +52,49 @@ export interface DiseaseInfo {
   riskFactors: string[];
   treatment: string;
 }
+
+export interface ModelPerformance {
+  precision: number;
+  recall: number;
+  f1Score: number;
+  support: number;
+}
+
+export const MODEL_PERFORMANCE: Record<DiseaseType, ModelPerformance> = {
+  cataract: { precision: 0.90, recall: 0.93, f1Score: 0.92, support: 233 },
+  diabetic_retinopathy: { precision: 1.00, recall: 0.99, f1Score: 0.99, support: 224 },
+  glaucoma: { precision: 0.82, recall: 0.82, f1Score: 0.82, support: 188 },
+  normal: { precision: 0.84, recall: 0.81, f1Score: 0.83, support: 199 },
+};
+
+export const PRELIMINARY_FINDINGS_MAP: Record<DiseaseType, Array<{ finding: string; defaultDetected: boolean }>> = {
+  diabetic_retinopathy: [
+    { finding: 'Possible hemorrhages detected', defaultDetected: true },
+    { finding: 'Microaneurysms may be present', defaultDetected: true },
+    { finding: 'Vascular abnormalities noted', defaultDetected: true },
+    { finding: 'Optic disk abnormality', defaultDetected: false },
+    { finding: 'Hard exudates observed', defaultDetected: true },
+  ],
+  glaucoma: [
+    { finding: 'Optic disk abnormality noted', defaultDetected: true },
+    { finding: 'Cup-to-disk ratio may be elevated', defaultDetected: true },
+    { finding: 'Nerve fiber layer changes suspected', defaultDetected: true },
+    { finding: 'Possible hemorrhages detected', defaultDetected: false },
+    { finding: 'Peripapillary atrophy observed', defaultDetected: true },
+  ],
+  cataract: [
+    { finding: 'Lens opacity detected', defaultDetected: true },
+    { finding: 'Crystalline lens changes observed', defaultDetected: true },
+    { finding: 'Reduced image clarity due to media opacity', defaultDetected: true },
+    { finding: 'Optic disk abnormality', defaultDetected: false },
+  ],
+  normal: [
+    { finding: 'No significant abnormalities detected', defaultDetected: true },
+    { finding: 'Retinal structures appear normal', defaultDetected: true },
+    { finding: 'Optic disk appears healthy', defaultDetected: true },
+    { finding: 'Vascular pattern within normal limits', defaultDetected: true },
+  ],
+};
 
 export const DISEASE_INFO: Record<DiseaseType, DiseaseInfo> = {
   cataract: {

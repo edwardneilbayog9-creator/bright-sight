@@ -13,18 +13,48 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const USERS_KEY = 'eyecare_users';
 const CURRENT_USER_KEY = 'eyecare_current_user';
+const INITIALIZED_KEY = 'eyecare_initialized';
+
+// Default doctor user
+const DEFAULT_DOCTOR: User = {
+  id: 'default-doctor-001',
+  email: 'doctor@clinic.com',
+  name: 'Dr. Ophthalmologist',
+  role: 'doctor',
+  createdAt: new Date().toISOString(),
+};
+const DEFAULT_DOCTOR_PASSWORD = 'password';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Initialize default doctor on first load
+    initializeDefaultUsers();
+    
     const storedUser = localStorage.getItem(CURRENT_USER_KEY);
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
     setIsLoading(false);
   }, []);
+
+  const initializeDefaultUsers = () => {
+    const initialized = localStorage.getItem(INITIALIZED_KEY);
+    if (!initialized) {
+      const users = getUsers();
+      
+      // Add default doctor if not exists
+      if (!users.find(u => u.email === DEFAULT_DOCTOR.email)) {
+        users.push(DEFAULT_DOCTOR);
+        saveUsers(users);
+        localStorage.setItem(`eyecare_pwd_${DEFAULT_DOCTOR.email}`, DEFAULT_DOCTOR_PASSWORD);
+      }
+      
+      localStorage.setItem(INITIALIZED_KEY, 'true');
+    }
+  };
 
   const getUsers = (): User[] => {
     const users = localStorage.getItem(USERS_KEY);

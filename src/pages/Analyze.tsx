@@ -4,6 +4,8 @@ import { Scan, User, Calendar, FileText, ArrowRight, AlertCircle } from 'lucide-
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { ImageUploader } from '@/components/analysis/ImageUploader';
 import { AnalysisResult } from '@/components/analysis/AnalysisResult';
+import { PreliminaryFindings } from '@/components/analysis/PreliminaryFindings';
+import { ProbabilityChart } from '@/components/analysis/ProbabilityChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,10 +14,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { useDetections } from '@/hooks/useDetections';
 import { useToast } from '@/hooks/use-toast';
-import { DiseaseType } from '@/types';
+import { DiseaseType, PreliminaryFinding, PRELIMINARY_FINDINGS_MAP } from '@/types';
 
 // Flask backend URL - Update this when running the Python backend
 const FLASK_API_URL = 'http://localhost:5000';
+
+interface AnalysisResultData {
+  classification: DiseaseType;
+  confidence: number;
+  allProbabilities: Record<DiseaseType, number>;
+  preliminaryFindings: PreliminaryFinding[];
+  reviewUrgency: 'routine' | 'priority' | 'urgent';
+}
 
 export default function Analyze() {
   const navigate = useNavigate();
@@ -29,12 +39,41 @@ export default function Analyze() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageBase64, setImageBase64] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [result, setResult] = useState<{ classification: DiseaseType; confidence: number } | null>(null);
+  const [result, setResult] = useState<AnalysisResultData | null>(null);
 
   const handleImageSelect = (file: File, base64: string) => {
     setImageFile(file);
     setImageBase64(base64);
     setResult(null);
+  };
+
+  const generatePreliminaryFindings = (
+    classification: DiseaseType, 
+    confidence: number
+  ): PreliminaryFinding[] => {
+    const findingsTemplate = PRELIMINARY_FINDINGS_MAP[classification] || [];
+    const confidenceLevel = confidence >= 0.85 ? 'high' : confidence >= 0.70 ? 'medium' : 'low';
+    
+    return findingsTemplate.map((item, index) => ({
+      id: `finding-${index}`,
+      finding: item.finding,
+      detected: item.defaultDetected,
+      confidence: confidenceLevel,
+    }));
+  };
+
+  const getReviewUrgency = (classification: DiseaseType, confidence: number): 'routine' | 'priority' | 'urgent' => {
+    if (classification === 'normal') return 'routine';
+    
+    if (confidence >= 0.85) {
+      if (classification === 'diabetic_retinopathy' || classification === 'glaucoma') {
+        return 'urgent';
+      }
+      return 'priority';
+    } else if (confidence >= 0.70) {
+      return 'priority';
+    }
+    return 'routine';
   };
 
   const analyzeImage = async () => {
@@ -61,9 +100,31 @@ export default function Analyze() {
 
       if (response.ok) {
         const data = await response.json();
+        const classification = data.classification as DiseaseType;
+        const confidence = data.confidence;
+        
+        // Use backend findings if available, otherwise generate
+        const findings = data.preliminary_findings 
+          ? data.preliminary_findings.map((f: { finding: string; detected: boolean }, i: number) => ({
+              id: `finding-${i}`,
+              finding: f.finding,
+              detected: f.detected,
+              confidence: confidence >= 0.85 ? 'high' : confidence >= 0.70 ? 'medium' : 'low',
+            }))
+          : generatePreliminaryFindings(classification, confidence);
+        
         setResult({
-          classification: data.classification as DiseaseType,
-          confidence: data.confidence,
+          classification,
+          confidence,
+          allProbabilities: data.all_probabilities || {
+            cataract: 0,
+            diabetic_retinopathy: 0,
+            glaucoma: 0,
+            normal: 0,
+            [classification]: confidence,
+          },
+          preliminaryFindings: findings,
+          reviewUrgency: data.review_urgency || getReviewUrgency(classification, confidence),
         });
       } else {
         throw new Error('Backend not available');
@@ -76,15 +137,33 @@ export default function Analyze() {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Mock classification result
-      const mockResults: Array<{ classification: DiseaseType; confidence: number }> = [
-        { classification: 'cataract', confidence: 0.87 },
-        { classification: 'diabetic_retinopathy', confidence: 0.92 },
-        { classification: 'glaucoma', confidence: 0.78 },
-        { classification: 'normal', confidence: 0.95 },
-      ];
+      const mockResults: DiseaseType[] = ['cataract', 'diabetic_retinopathy', 'glaucoma', 'normal'];
+      const classification = mockResults[Math.floor(Math.random() * mockResults.length)];
+      const confidence = 0.75 + Math.random() * 0.20; // 75-95%
       
-      const mockResult = mockResults[Math.floor(Math.random() * mockResults.length)];
-      setResult(mockResult);
+      // Generate mock probabilities
+      const allProbabilities: Record<DiseaseType, number> = {
+        cataract: Math.random() * 0.15,
+        diabetic_retinopathy: Math.random() * 0.15,
+        glaucoma: Math.random() * 0.15,
+        normal: Math.random() * 0.15,
+      };
+      allProbabilities[classification] = confidence;
+      
+      // Normalize
+      const total = Object.values(allProbabilities).reduce((a, b) => a + b, 0);
+      (Object.keys(allProbabilities) as DiseaseType[]).forEach(key => {
+        allProbabilities[key] = allProbabilities[key] / total;
+      });
+      allProbabilities[classification] = confidence;
+      
+      setResult({
+        classification,
+        confidence,
+        allProbabilities,
+        preliminaryFindings: generatePreliminaryFindings(classification, confidence),
+        reviewUrgency: getReviewUrgency(classification, confidence),
+      });
 
       toast({
         title: 'Demo Mode',
@@ -110,6 +189,9 @@ export default function Analyze() {
       remarks,
       doctorReview: null,
       status: 'analyzed',
+      preliminaryFindings: result.preliminaryFindings,
+      allProbabilities: result.allProbabilities,
+      reviewUrgency: result.reviewUrgency,
     });
 
     toast({
@@ -238,6 +320,21 @@ export default function Analyze() {
                   classification={result.classification}
                   confidence={result.confidence}
                 />
+                
+                {/* Probability Distribution */}
+                <ProbabilityChart
+                  allProbabilities={result.allProbabilities}
+                  topClassification={result.classification}
+                />
+                
+                {/* Preliminary Findings & Review Recommendation */}
+                <PreliminaryFindings
+                  classification={result.classification}
+                  confidence={result.confidence}
+                  findings={result.preliminaryFindings}
+                  reviewUrgency={result.reviewUrgency}
+                />
+                
                 <Button onClick={saveDetection} className="w-full" size="lg">
                   Save & Continue to Review
                   <ArrowRight className="w-4 h-4 ml-2" />

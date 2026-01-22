@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+python_backend/venv/
+python_backend/models/best_enhanced_vit.pth

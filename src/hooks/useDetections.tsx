@@ -1,91 +1,101 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Detection, DoctorReview } from '@/types';
 import { useAuth } from './useAuth';
-
-const DETECTIONS_KEY = 'eyecare_detections';
+import { useDatabase } from '@/lib/db';
 
 export function useDetections() {
   const { user } = useAuth();
+  const { isReady, detectionRepository } = useDatabase();
   const [detections, setDetections] = useState<Detection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadDetections();
-  }, [user]);
+  const loadDetections = useCallback(() => {
+    if (!isReady || !detectionRepository || !user) {
+      setDetections([]);
+      return;
+    }
 
-  const loadDetections = () => {
-    const stored = localStorage.getItem(DETECTIONS_KEY);
-    const allDetections: Detection[] = stored ? JSON.parse(stored) : [];
-    
-    // Filter by user if not admin/doctor
-    if (user?.role === 'technician') {
-      setDetections(allDetections.filter(d => d.userId === user.id));
-    } else {
-      setDetections(allDetections);
+    try {
+      // Filter by user if technician
+      if (user.role === 'technician') {
+        setDetections(detectionRepository.findByUserId(user.id));
+      } else {
+        setDetections(detectionRepository.findAll());
+      }
+    } catch (error) {
+      console.error('Failed to load detections:', error);
+      setDetections([]);
     }
     setIsLoading(false);
-  };
+  }, [isReady, detectionRepository, user]);
 
-  const saveDetections = (newDetections: Detection[]) => {
-    localStorage.setItem(DETECTIONS_KEY, JSON.stringify(newDetections));
-    loadDetections();
-  };
+  useEffect(() => {
+    if (isReady && user) {
+      loadDetections();
+    } else if (isReady && !user) {
+      setIsLoading(false);
+    }
+  }, [isReady, user, loadDetections]);
 
   const addDetection = (detection: Omit<Detection, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const stored = localStorage.getItem(DETECTIONS_KEY);
-    const allDetections: Detection[] = stored ? JSON.parse(stored) : [];
-    
-    const newDetection: Detection = {
-      ...detection,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    if (!detectionRepository) return null;
 
-    allDetections.push(newDetection);
-    saveDetections(allDetections);
-    return newDetection;
+    try {
+      const newDetection = detectionRepository.create(detection);
+      loadDetections();
+      return newDetection;
+    } catch (error) {
+      console.error('Failed to add detection:', error);
+      return null;
+    }
   };
 
   const updateDetection = (id: string, updates: Partial<Detection>) => {
-    const stored = localStorage.getItem(DETECTIONS_KEY);
-    const allDetections: Detection[] = stored ? JSON.parse(stored) : [];
-    
-    const index = allDetections.findIndex(d => d.id === id);
-    if (index !== -1) {
-      allDetections[index] = {
-        ...allDetections[index],
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      };
-      saveDetections(allDetections);
-      return allDetections[index];
+    if (!detectionRepository) return null;
+
+    try {
+      const updated = detectionRepository.update(id, updates);
+      loadDetections();
+      return updated;
+    } catch (error) {
+      console.error('Failed to update detection:', error);
+      return null;
     }
-    return null;
   };
 
   const addDoctorReview = (detectionId: string, review: Omit<DoctorReview, 'reviewedAt'>) => {
-    const fullReview: DoctorReview = {
-      ...review,
-      reviewedAt: new Date().toISOString(),
-    };
+    if (!detectionRepository) return null;
 
-    return updateDetection(detectionId, {
-      doctorReview: fullReview,
-      status: 'reviewed',
-    });
+    try {
+      const updated = detectionRepository.addDoctorReview(detectionId, review);
+      loadDetections();
+      return updated;
+    } catch (error) {
+      console.error('Failed to add doctor review:', error);
+      return null;
+    }
   };
 
   const deleteDetection = (id: string) => {
-    const stored = localStorage.getItem(DETECTIONS_KEY);
-    const allDetections: Detection[] = stored ? JSON.parse(stored) : [];
-    
-    const filtered = allDetections.filter(d => d.id !== id);
-    saveDetections(filtered);
+    if (!detectionRepository) return;
+
+    try {
+      detectionRepository.delete(id);
+      loadDetections();
+    } catch (error) {
+      console.error('Failed to delete detection:', error);
+    }
   };
 
   const getDetectionById = (id: string) => {
-    return detections.find(d => d.id === id);
+    if (!detectionRepository) return undefined;
+
+    try {
+      return detectionRepository.findById(id);
+    } catch (error) {
+      console.error('Failed to get detection:', error);
+      return undefined;
+    }
   };
 
   return {

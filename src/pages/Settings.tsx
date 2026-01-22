@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings as SettingsIcon, User, Bell, Shield, Database, Save, Loader2 } from 'lucide-react';
+import { Settings as SettingsIcon, User, Bell, Shield, Save, Loader2 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,6 @@ export default function Settings() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [backendUrl, setBackendUrl] = useState('http://localhost:5000');
   const [notifications, setNotifications] = useState(true);
   const [autoSave, setAutoSave] = useState(true);
 
@@ -24,7 +23,6 @@ export default function Settings() {
     
     // Save settings to localStorage
     localStorage.setItem('eyecare_settings', JSON.stringify({
-      backendUrl,
       notifications,
       autoSave,
     }));
@@ -74,40 +72,6 @@ export default function Settings() {
               <div className="space-y-2">
                 <Label>Role</Label>
                 <Input value={user?.role || 'Technician'} disabled className="capitalize" />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Backend Settings */}
-          <Card className="medical-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="w-5 h-5 text-primary" />
-                Backend Configuration
-              </CardTitle>
-              <CardDescription>
-                Flask server settings for model inference
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="backendUrl">Flask Backend URL</Label>
-                <Input
-                  id="backendUrl"
-                  value={backendUrl}
-                  onChange={(e) => setBackendUrl(e.target.value)}
-                  placeholder="http://localhost:5000"
-                />
-                <p className="text-xs text-muted-foreground">
-                  URL where the Python Flask server is running
-                </p>
-              </div>
-              <Separator />
-              <div className="p-4 rounded-lg bg-muted/50">
-                <p className="text-sm text-muted-foreground">
-                  The Flask backend handles ViT model inference for fundus image classification.
-                  Make sure the server is running before analyzing images.
-                </p>
               </div>
             </CardContent>
           </Card>
@@ -167,7 +131,7 @@ export default function Settings() {
               <div className="p-4 rounded-lg bg-success/10 border border-success/20">
                 <p className="text-sm text-success font-medium">✓ Data stored locally</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  All detection data is stored in your browser's local storage
+                  All detection data is stored in a local SQLite database
                 </p>
               </div>
               <Separator />

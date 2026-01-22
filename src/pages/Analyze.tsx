@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Scan, User, Calendar, FileText, ArrowRight, AlertCircle } from 'lucide-react';
+import { Scan, User, Calendar, FileText, ArrowRight } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { ImageUploader } from '@/components/analysis/ImageUploader';
 import { AnalysisResult } from '@/components/analysis/AnalysisResult';
@@ -297,19 +297,6 @@ export default function Analyze() {
               </CardContent>
             </Card>
 
-            {/* Backend Status */}
-            <div className="p-4 rounded-lg bg-muted/50 border">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-foreground">Flask Backend</p>
-                  <p className="text-muted-foreground mt-1">
-                    The model inference runs on a Flask server at <code className="px-1 py-0.5 rounded bg-muted">{FLASK_API_URL}</code>. 
-                    If not running, demo mode will be used.
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Right Column - Results */}

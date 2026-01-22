@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { DatabaseProvider, useDatabase } from "@/lib/db";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
@@ -13,6 +14,40 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+function DatabaseLoader({ children }: { children: React.ReactNode }) {
+  const { isReady, isError, error } = useDatabase();
+
+  if (isError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center p-6">
+          <div className="text-destructive text-lg font-semibold mb-2">Database Error</div>
+          <p className="text-muted-foreground">{error?.message || 'Failed to initialize database'}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-pulse text-primary text-lg">Initializing database...</div>
+          <p className="text-muted-foreground text-sm mt-2">Loading SQLite engine</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -87,9 +122,13 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
+        <DatabaseProvider>
+          <DatabaseLoader>
+            <AuthProvider>
+              <AppRoutes />
+            </AuthProvider>
+          </DatabaseLoader>
+        </DatabaseProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

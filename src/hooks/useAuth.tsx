@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '@/types';
+import { useDatabase } from '@/lib/db';
 
 interface AuthContextType {
   user: User | null;
@@ -11,108 +12,74 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const USERS_KEY = 'eyecare_users';
-const CURRENT_USER_KEY = 'eyecare_current_user';
-const INITIALIZED_KEY = 'eyecare_initialized';
-
-// Default doctor user
-const DEFAULT_DOCTOR: User = {
-  id: 'default-doctor-001',
-  email: 'doctor@clinic.com',
-  name: 'Dr. Ophthalmologist',
-  role: 'doctor',
-  createdAt: new Date().toISOString(),
-};
-const DEFAULT_DOCTOR_PASSWORD = 'password';
+const CURRENT_USER_KEY = 'eyecare_current_user_id';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { isReady, userRepository } = useDatabase();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize default doctor on first load
-    initializeDefaultUsers();
-    
-    const storedUser = localStorage.getItem(CURRENT_USER_KEY);
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    if (!isReady || !userRepository) return;
+
+    // Restore user session from sessionStorage
+    const storedUserId = sessionStorage.getItem(CURRENT_USER_KEY);
+    if (storedUserId) {
+      const foundUser = userRepository.findById(storedUserId);
+      if (foundUser) {
+        setUser(foundUser);
+      } else {
+        // User no longer exists, clear session
+        sessionStorage.removeItem(CURRENT_USER_KEY);
+      }
     }
     setIsLoading(false);
-  }, []);
-
-  const initializeDefaultUsers = () => {
-    const initialized = localStorage.getItem(INITIALIZED_KEY);
-    if (!initialized) {
-      const users = getUsers();
-      
-      // Add default doctor if not exists
-      if (!users.find(u => u.email === DEFAULT_DOCTOR.email)) {
-        users.push(DEFAULT_DOCTOR);
-        saveUsers(users);
-        localStorage.setItem(`eyecare_pwd_${DEFAULT_DOCTOR.email}`, DEFAULT_DOCTOR_PASSWORD);
-      }
-      
-      localStorage.setItem(INITIALIZED_KEY, 'true');
-    }
-  };
-
-  const getUsers = (): User[] => {
-    const users = localStorage.getItem(USERS_KEY);
-    return users ? JSON.parse(users) : [];
-  };
-
-  const saveUsers = (users: User[]) => {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  };
+  }, [isReady, userRepository]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const users = getUsers();
-    // Simple password check using stored hash (in real app, use proper auth)
-    const passwordKey = `eyecare_pwd_${email}`;
-    const storedPassword = localStorage.getItem(passwordKey);
-    
-    if (storedPassword !== password) {
-      return false;
-    }
+    if (!userRepository) return false;
 
-    const foundUser = users.find(u => u.email === email);
+    const isValid = userRepository.validatePassword(email, password);
+    if (!isValid) return false;
+
+    const foundUser = userRepository.findByEmail(email);
     if (foundUser) {
       setUser(foundUser);
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(foundUser));
+      sessionStorage.setItem(CURRENT_USER_KEY, foundUser.id);
       return true;
     }
     return false;
   };
 
   const register = async (email: string, password: string, name: string): Promise<boolean> => {
-    const users = getUsers();
-    
-    if (users.find(u => u.email === email)) {
+    if (!userRepository) return false;
+
+    // Check if user already exists
+    const existing = userRepository.findByEmail(email);
+    if (existing) return false;
+
+    try {
+      const newUser = userRepository.create(
+        {
+          email,
+          name,
+          role: 'technician',
+        },
+        password
+      );
+
+      setUser(newUser);
+      sessionStorage.setItem(CURRENT_USER_KEY, newUser.id);
+      return true;
+    } catch (error) {
+      console.error('Registration failed:', error);
       return false;
     }
-
-    const newUser: User = {
-      id: crypto.randomUUID(),
-      email,
-      name,
-      role: 'technician',
-      createdAt: new Date().toISOString(),
-    };
-
-    users.push(newUser);
-    saveUsers(users);
-    
-    // Store password
-    localStorage.setItem(`eyecare_pwd_${email}`, password);
-    
-    setUser(newUser);
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
-    return true;
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem(CURRENT_USER_KEY);
+    sessionStorage.removeItem(CURRENT_USER_KEY);
   };
 
   return (

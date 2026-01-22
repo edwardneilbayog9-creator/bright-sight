@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Analyze from "./pages/Analyze";
+import ReviewQueue from "./pages/ReviewQueue";
 import History from "./pages/History";
 import DetectionDetail from "./pages/DetectionDetail";
 import Settings from "./pages/Settings";
@@ -84,6 +85,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Analyze />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/reviews"
+        element={
+          <ProtectedRoute>
+            <ReviewQueue />
           </ProtectedRoute>
         }
       />

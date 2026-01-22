@@ -7,7 +7,8 @@ import {
   History, 
   Settings, 
   LogOut,
-  ChevronRight
+  ChevronRight,
+  ClipboardList
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,6 +21,7 @@ interface DashboardLayoutProps {
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'New Analysis', href: '/dashboard/analyze', icon: Upload },
+  { name: 'Review Queue', href: '/dashboard/reviews', icon: ClipboardList },
   { name: 'History', href: '/dashboard/history', icon: History },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];

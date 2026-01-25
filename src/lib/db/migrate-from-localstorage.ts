@@ -2,9 +2,9 @@ import { UserRepository } from './repositories/user-repository';
 import { DetectionRepository } from './repositories/detection-repository';
 import { User, Detection } from '@/types';
 
-const MIGRATION_COMPLETE_KEY = 'eyecare_sqlite_migrated';
+const MIGRATION_COMPLETE_KEY = 'brightsight_sqlite_migrated';
 
-// Old localStorage keys
+// Old localStorage keys (kept for migration compatibility)
 const OLD_USERS_KEY = 'eyecare_users';
 const OLD_DETECTIONS_KEY = 'eyecare_detections';
 

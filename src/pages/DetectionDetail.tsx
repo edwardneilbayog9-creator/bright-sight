@@ -47,7 +47,7 @@ export default function DetectionDetail() {
       <div className="p-6 lg:p-8 space-y-6">
         {/* Print-only header */}
         <div className="hidden print:block mb-6 text-center border-b border-border pb-4">
-          <h1 className="text-2xl font-bold text-foreground">EyeCare AI Pre-Diagnosis Report</h1>
+          <h1 className="text-2xl font-bold text-foreground">BrightSight Pre-Diagnosis Report</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
           </p>

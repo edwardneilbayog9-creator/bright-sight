@@ -47,8 +47,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <Eye className="w-6 h-6 text-sidebar-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-bold text-sidebar-foreground">EyeCare AI</h1>
-              <p className="text-xs text-sidebar-foreground/60">Pre-Diagnosis System</p>
+              <h1 className="font-bold text-sidebar-foreground">BrightSight</h1>
+              <p className="text-xs text-sidebar-foreground/60">Eye Disease Detection</p>
             </div>
           </Link>
         </div>

@@ -12,7 +12,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const CURRENT_USER_KEY = 'eyecare_current_user_id';
+const CURRENT_USER_KEY = 'brightsight_current_user_id';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { isReady, userRepository } = useDatabase();

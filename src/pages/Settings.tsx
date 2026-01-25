@@ -22,7 +22,7 @@ export default function Settings() {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Save settings to localStorage
-    localStorage.setItem('eyecare_settings', JSON.stringify({
+    localStorage.setItem('brightsight_settings', JSON.stringify({
       notifications,
       autoSave,
     }));

@@ -16,7 +16,7 @@ export function HeroSection() {
             <Eye className="w-10 h-10 text-secondary" />
           </div>
           <span className="text-secondary font-semibold tracking-wide uppercase text-sm">
-            EyeCare AI
+            BrightSight
           </span>
         </div>
 

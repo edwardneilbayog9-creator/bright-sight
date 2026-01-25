@@ -2,7 +2,7 @@ import initSqlJs, { Database } from 'sql.js';
 import { IDatabaseService } from './interfaces';
 import { SCHEMA_SQL, DEFAULT_DOCTOR } from './schema';
 
-const DB_STORAGE_KEY = 'eyecare_sqlite_db';
+const DB_STORAGE_KEY = 'brightsight_sqlite_db';
 
 export class SqlJsService implements IDatabaseService {
   private db: Database | null = null;

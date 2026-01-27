@@ -26,3 +26,6 @@ dist-ssr
 python_backend/venv/
 python_backend/models/best_enhanced_vit.pth
 python_backend/models/best_enhanced_vit_old.pth
+release
+dist
+dist-electron

@@ -10,7 +10,24 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && cross-env NODE_ENV=development electron .\"",
+    "electron:build": "npm run build && electron-builder",
+    "electron:build:win": "npm run build && electron-builder --win",
+    "electron:build:mac": "npm run build && electron-builder --mac",
+    "electron:build:linux": "npm run build && electron-builder --linux"
+  },
+  "main": "dist-electron/main.js",
+  "build": {
+    "appId": "com.brightsight.guide",
+    "productName": "BrightSight",
+    "linux": {
+      "target": ["deb"], 
+      "category": "Utility",
+      "maintainer": "edwinbayog07@gmail.com"
+    },
+    "directories": { "output": "release" },
+    "files": ["dist/**/*", "dist-electron/**/*"]
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -48,8 +65,6 @@
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "date-fns": "^3.6.0",
-    "electron": "^40.0.0",
-    "electron-builder": "^26.4.0",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
@@ -71,6 +86,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
+    "electron": "^40.0.0",
+    "electron-builder": "^26.4.0",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",

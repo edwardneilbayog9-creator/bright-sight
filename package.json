@@ -22,12 +22,19 @@
     "appId": "com.brightsight.guide",
     "productName": "BrightSight",
     "linux": {
-      "target": ["deb"], 
+      "target": [
+        "deb"
+      ],
       "category": "Utility",
       "maintainer": "edwinbayog07@gmail.com"
     },
-    "directories": { "output": "release" },
-    "files": ["dist/**/*", "dist-electron/**/*"]
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ]
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -86,8 +93,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
-    "electron": "^40.0.0",
-    "electron-builder": "^26.4.0",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",
@@ -96,6 +101,8 @@
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react-swc": "^3.11.0",
     "autoprefixer": "^10.4.21",
+    "electron": "^40.0.0",
+    "electron-builder": "^26.4.0",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
@@ -107,6 +114,7 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
     "vite": "^5.4.19",
+    "vite-plugin-electron": "^0.29.0",
     "vitest": "^3.2.4"
   }
 }

@@ -98,7 +98,7 @@ export function ImageUploader({ onImageSelect, isAnalyzing }: ImageUploaderProps
                 <div className="text-center">
                   <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-3" />
                   <p className="text-sm font-medium text-foreground">Analyzing image...</p>
-                  <p className="text-xs text-muted-foreground">Running ViT model inference</p>
+                  <p className="text-xs text-muted-foreground">Running EfficientNet model inference</p>
                 </div>
               </div>
             )}

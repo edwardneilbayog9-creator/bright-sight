@@ -5,9 +5,7 @@ flask==3.0.0
 flask-cors==4.0.0
 
 # Deep Learning
-torch>=2.0.0
-torchvision>=0.15.0
-timm==0.9.12  # For Vision Transformer models
+tensorflow>=2.13.0
 
 # Image Processing
 Pillow>=10.0.0
@@ -16,7 +14,3 @@ numpy>=1.24.0
 # Utilities
 python-dotenv==1.0.0
 gunicorn==21.2.0  # For production deployment
-
-# Optional: For model optimization
-# onnx>=1.14.0
-# onnxruntime>=1.15.0

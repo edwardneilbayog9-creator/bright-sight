@@ -1,6 +1,6 @@
 # Eye Disease Detection Flask Backend
 
-This Flask server provides the backend inference API for the Eye Disease Pre-Diagnosis System using a Vision Transformer (ViT) model.
+This Flask server provides the backend inference API for the Eye Disease Pre-Diagnosis System using an EfficientNetV2-S model.
 
 ## Setup
 
@@ -25,12 +25,12 @@ pip install -r requirements.txt
 
 ### 3. Place Your Model
 
-Place your `best_enhanced_vit.pth` model file in the `models/` directory:
+Place your `efficientnetv2_s_eye_model.h5` model file in the `models/` directory:
 
 ```
 python_backend/
 ├── models/
-│   └── best_enhanced_vit.pth
+│   └── efficientnetv2_s_eye_model.h5
 ├── app.py
 ├── requirements.txt
 └── README.md
@@ -76,13 +76,14 @@ Health check endpoint.
 ```json
 {
   "status": "healthy",
-  "model_loaded": true
+  "model_loaded": true,
+  "model_architecture": "EfficientNetV2-S"
 }
 ```
 
 ## Model Architecture
 
-The system uses an Enhanced Vision Transformer (ViT) model trained on fundus images to classify:
+The system uses an EfficientNetV2-S model trained on fundus images to classify:
 - Cataract
 - Diabetic Retinopathy
 - Glaucoma
@@ -93,17 +94,18 @@ The system uses an Enhanced Vision Transformer (ViT) model trained on fundus ima
 The server is configured to accept requests from:
 - http://localhost:5173 (Vite dev server)
 - http://localhost:3000
+- http://localhost:8080
 - Any lovable.app subdomain
 
 ## Troubleshooting
 
 ### Model Not Loading
-- Ensure `best_enhanced_vit.pth` is in the `models/` directory
-- Check that the model architecture matches the one defined in `app.py`
+- Ensure `efficientnetv2_s_eye_model.h5` is in the `models/` directory
+- Check that TensorFlow is properly installed: `pip install tensorflow`
 
-### CUDA/GPU Issues
-- The server will automatically use GPU if available
+### GPU Issues
+- TensorFlow will automatically use GPU if available and CUDA is configured
 - Set `CUDA_VISIBLE_DEVICES=""` to force CPU usage
 
 ### Port Already in Use
-- Change the port in `app.py` or use: `python app.py --port 5001`
+- Change the port: `PORT=5001 python app.py`

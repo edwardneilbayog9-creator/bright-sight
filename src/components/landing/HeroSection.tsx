@@ -50,8 +50,8 @@ export function HeroSection() {
         <div className="grid grid-cols-2 gap-4">
           <FeatureCard
             icon={Microscope}
-            title="ViT Model"
-            description="Vision Transformer architecture"
+            title="EfficientNet Model"
+            description="EfficientNetV2-S architecture"
           />
           <FeatureCard
             icon={Activity}

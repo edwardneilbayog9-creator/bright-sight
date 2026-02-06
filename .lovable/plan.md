@@ -1,316 +1,135 @@
 
-# Plan: Migrate BrightSight to Electron Desktop Application
+# Plan: Refactor Backend from ViT (PyTorch) to EfficientNetV2-S (TensorFlow/Keras)
 
 ## Overview
 
-This plan will set up Electron for desktop deployment while maintaining web compatibility. We'll use **HashRouter** for proper file:// protocol routing in Electron and configure build scripts for Windows, macOS, and Linux.
+Your new model `efficientnetv2_s_eye_model.h5` is a Keras/TensorFlow model (`.h5` format), which means the backend needs to switch its deep learning framework from **PyTorch + timm** to **TensorFlow/Keras**. The API endpoints and response format will remain identical, so the React frontend needs only minor text updates.
 
 ---
 
-## Architecture
+## What Changes and Why
+
+| Area | Current (ViT) | New (EfficientNetV2-S) |
+|------|---------------|----------------------|
+| Model file | `best_enhanced_vit.pth` (PyTorch) | `efficientnetv2_s_eye_model.h5` (Keras) |
+| Framework | PyTorch + timm | TensorFlow/Keras |
+| Architecture | `vit_base_patch16_224` | `EfficientNetV2S` |
+| Input size | 224x224 | 384x384 (EfficientNetV2-S default) |
+| Preprocessing | PyTorch transforms + ImageNet normalization | `tf.keras.applications.efficientnet_v2.preprocess_input` |
+| Inference | `torch.no_grad()` + `F.softmax()` | `model.predict()` (softmax built-in or applied) |
+
+---
+
+## Files to Modify
+
+### 1. `python_backend/app.py` (Major Refactor)
+
+The core backend file needs the following changes:
+
+- **Imports**: Replace `torch`, `torchvision`, `timm` with `tensorflow`, `numpy`
+- **Model path**: Point to `efficientnetv2_s_eye_model.h5` instead of `best_enhanced_vit.pth`
+- **`load_model()` function**: Use `tf.keras.models.load_model()` instead of `timm.create_model()` + `torch.load()`
+- **Preprocessing pipeline**: Replace PyTorch transforms with TensorFlow/Keras preprocessing:
+  - Resize to 384x384 (EfficientNetV2-S standard input) or 224x224 depending on your training
+  - Use `preprocess_input` from `tf.keras.applications.efficientnet_v2`
+- **`predict_image()` function**: Replace PyTorch inference with `model.predict()`
+- **Device handling**: Remove CUDA/torch device logic (TensorFlow handles GPU automatically)
+- **Root endpoint**: Update description and model performance metrics to reflect EfficientNetV2-S
+- **Docstrings**: Update all ViT references to EfficientNetV2-S
+
+### 2. `python_backend/requirements.txt` (Dependency Swap)
+
+Replace PyTorch dependencies with TensorFlow:
 
 ```text
-┌─────────────────────────────────────────────────────┐
-│                  BrightSight App                    │
-├─────────────────────────────────────────────────────┤
-│  React Frontend (Vite build)                        │
-│    └── HashRouter (works with file:// protocol)    │
-├─────────────────────────────────────────────────────┤
-│  Electron Main Process                              │
-│    ├── electron/main.js (window management)         │
-│    └── electron/preload.js (security bridge)        │
-├─────────────────────────────────────────────────────┤
-│  Database Layer                                     │
-│    ├── sql.js (current - web/localStorage)          │
-│    └── better-sqlite3 (future - native file DB)     │
-└─────────────────────────────────────────────────────┘
+# Remove:
+torch>=2.0.0
+torchvision>=0.15.0
+timm==0.9.12
+
+# Add:
+tensorflow>=2.13.0
+numpy>=1.24.0
+```
+
+### 3. `python_backend/README.md` (Documentation Update)
+
+- Update all references from "Vision Transformer (ViT)" to "EfficientNetV2-S"
+- Update model file name from `best_enhanced_vit.pth` to `efficientnetv2_s_eye_model.h5`
+- Update directory structure example
+- Update troubleshooting section
+
+### 4. `src/components/landing/HeroSection.tsx` (Minor Text Update)
+
+- Line 53: Change `"ViT Model"` title to `"EfficientNet Model"`
+- Line 54: Change description from `"Vision Transformer architecture"` to `"EfficientNetV2-S architecture"`
+
+### 5. `src/components/analysis/ImageUploader.tsx` (Minor Text Update)
+
+- Line 101: Change `"Running ViT model inference"` to `"Running EfficientNet model inference"`
+
+---
+
+## Technical Details: New `app.py` Inference Logic
+
+The key changes in the inference pipeline:
+
+```python
+# Loading the model
+import tensorflow as tf
+
+MODEL_PATH = os.path.join(os.path.dirname(__file__), 'models', 'efficientnetv2_s_eye_model.h5')
+
+def load_model():
+    global model
+    model = tf.keras.models.load_model(MODEL_PATH)
+
+# Preprocessing
+import numpy as np
+from tensorflow.keras.applications.efficientnet_v2 import preprocess_input
+from tensorflow.keras.preprocessing.image import img_to_array
+
+def preprocess_image(image):
+    image = image.resize((224, 224))  # Match your training input size
+    img_array = img_to_array(image)
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array = preprocess_input(img_array)
+    return img_array
+
+# Inference
+def predict_image(image):
+    processed = preprocess_image(image)
+    predictions = model.predict(processed)[0]
+    predicted_idx = np.argmax(predictions)
+    confidence = float(predictions[predicted_idx])
+    # ... rest stays the same
 ```
 
 ---
 
-## Part 1: Install Electron Dependencies
+## What Stays the Same
 
-### New packages to install:
-
-```bash
-npm install --save-dev electron electron-builder concurrently wait-on cross-env
-```
-
-| Package | Purpose |
-|---------|---------|
-| `electron` | Desktop application framework |
-| `electron-builder` | Package and distribute for Win/Mac/Linux |
-| `concurrently` | Run multiple npm scripts simultaneously |
-| `wait-on` | Wait for Vite dev server before launching Electron |
-| `cross-env` | Cross-platform environment variables |
+- **API endpoints**: `/predict`, `/health`, `/` remain identical
+- **Response format**: Same JSON structure (classification, confidence, all_probabilities, preliminary_findings, review_urgency)
+- **Frontend logic**: `src/pages/Analyze.tsx` needs zero changes -- it already handles the API response correctly
+- **Disease classes**: Same 4 classes in the same order: `['cataract', 'diabetic_retinopathy', 'glaucoma', 'normal']`
+- **CORS configuration**: No changes needed
+- **Preliminary findings mapping**: No changes needed
 
 ---
 
-## Part 2: Create Electron Configuration Files
+## Important Note on Input Size
 
-### File: `electron/main.js`
-
-Main process that creates the application window:
-
-```javascript
-const { app, BrowserWindow, shell } = require('electron');
-const path = require('path');
-
-// Handle creating/removing shortcuts on Windows when installing/uninstalling
-if (require('electron-squirrel-startup')) app.quit();
-
-const isDev = process.env.NODE_ENV === 'development';
-
-function createWindow() {
-  const mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 900,
-    minWidth: 1024,
-    minHeight: 768,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: false,
-      contextIsolation: true,
-    },
-    icon: path.join(__dirname, '../public/favicon.ico'),
-    title: 'BrightSight - Eye Disease Detection',
-    autoHideMenuBar: true,
-  });
-
-  // Load the app
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:8080');
-    mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
-  }
-
-  // Open external links in browser
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
-    return { action: 'deny' };
-  });
-}
-
-app.whenReady().then(createWindow);
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
-});
-```
-
-### File: `electron/preload.js`
-
-Security bridge for future IPC communication:
-
-```javascript
-const { contextBridge, ipcRenderer } = require('electron');
-
-// Expose protected methods for renderer process
-contextBridge.exposeInMainWorld('electronAPI', {
-  platform: process.platform,
-  isElectron: true,
-  // Add more APIs as needed for better-sqlite3 integration
-});
-```
+EfficientNetV2-S typically uses 384x384 input, but since your model was trained with a specific configuration, the plan will use 224x224 to match the training transforms visible in your notebook. If your EfficientNet training used a different size, this can be adjusted.
 
 ---
 
-## Part 3: Update App.tsx - Switch to HashRouter
+## Summary
 
-Change `BrowserRouter` to `HashRouter` for Electron compatibility:
-
-```tsx
-// Before
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-
-// After  
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
-
-// In component (line 133):
-// Before: <BrowserRouter>
-// After:  <HashRouter>
-```
-
-**Why HashRouter?**
-- Electron loads files using `file://` protocol
-- BrowserRouter requires a web server to handle routes
-- HashRouter uses URL hash (`#/dashboard`) which works locally
-
----
-
-## Part 4: Update Vite Configuration
-
-### File: `vite.config.ts`
-
-Add `base` configuration for Electron production builds:
-
-```typescript
-export default defineConfig(({ mode }) => ({
-  // Add this for Electron - use relative paths in production
-  base: mode === 'production' ? './' : '/',
-  
-  server: {
-    host: "::",
-    port: 8080,
-    hmr: {
-      overlay: false,
-    },
-  },
-  // ... rest of config
-}));
-```
-
----
-
-## Part 5: Update package.json
-
-### Add Electron configuration and build scripts:
-
-```json
-{
-  "name": "brightsight",
-  "version": "1.0.0",
-  "description": "AI-powered eye disease detection and pre-diagnosis system",
-  "main": "electron/main.js",
-  "author": "BrightSight Team",
-  "license": "MIT",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && cross-env NODE_ENV=development electron .\"",
-    "electron:build": "npm run build && electron-builder",
-    "electron:build:win": "npm run build && electron-builder --win",
-    "electron:build:mac": "npm run build && electron-builder --mac",
-    "electron:build:linux": "npm run build && electron-builder --linux",
-    "electron:build:all": "npm run build && electron-builder --win --mac --linux"
-  },
-  "build": {
-    "appId": "com.brightsight.app",
-    "productName": "BrightSight",
-    "copyright": "Copyright © 2025 BrightSight",
-    "directories": {
-      "output": "release",
-      "buildResources": "build"
-    },
-    "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "public/**/*"
-    ],
-    "win": {
-      "target": ["nsis", "portable"],
-      "icon": "public/favicon.ico"
-    },
-    "mac": {
-      "target": ["dmg", "zip"],
-      "icon": "public/favicon.ico",
-      "category": "public.app-category.medical"
-    },
-    "linux": {
-      "target": ["AppImage", "deb"],
-      "icon": "public/favicon.ico",
-      "category": "Science"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "installerIcon": "public/favicon.ico",
-      "uninstallerIcon": "public/favicon.ico"
-    }
-  }
-}
-```
-
----
-
-## Part 6: Create Build Resources Directory
-
-### File: `build/.gitkeep`
-
-Create placeholder for build resources (icons, certificates):
-
-```text
-# Build resources directory
-# Place platform-specific icons here:
-# - icon.ico (Windows)
-# - icon.icns (macOS)  
-# - icon.png (Linux - 512x512)
-```
-
----
-
-## Summary of Files to Create/Modify
-
-| File | Action | Purpose |
-|------|--------|---------|
-| `electron/main.js` | Create | Electron main process |
-| `electron/preload.js` | Create | Security bridge |
-| `src/App.tsx` | Modify | BrowserRouter → HashRouter |
-| `vite.config.ts` | Modify | Add `base: './'` for production |
-| `package.json` | Modify | Add Electron scripts and build config |
-| `build/.gitkeep` | Create | Build resources placeholder |
-
----
-
-## Usage Guide After Implementation
-
-### Development Commands
-
-```bash
-# Web development (current)
-npm run dev
-
-# Electron development (opens desktop window)
-npm run electron:dev
-```
-
-### Build Commands
-
-```bash
-# Build for Windows (creates .exe installer)
-npm run electron:build:win
-
-# Build for macOS (creates .dmg)
-npm run electron:build:mac
-
-# Build for Linux (creates .AppImage and .deb)
-npm run electron:build:linux
-
-# Build for all platforms
-npm run electron:build:all
-```
-
-### Output Location
-
-Built applications will be in the `release/` directory:
-- Windows: `release/BrightSight Setup 1.0.0.exe`
-- macOS: `release/BrightSight-1.0.0.dmg`
-- Linux: `release/BrightSight-1.0.0.AppImage`
-
----
-
-## Future Enhancement: Native SQLite (better-sqlite3)
-
-The database interface (`IDatabaseService`) was designed for this migration. After Electron is working, you can:
-
-1. Install `better-sqlite3` for native file-based database
-2. Create `BetterSqliteService` implementing the same interface
-3. Store database in Electron's `userData` directory
-4. Auto-detect environment and use appropriate service
-
-This would give you:
-- Larger database capacity (no localStorage limits)
-- Better performance for complex queries
-- Proper file-based persistence
-
+| File | Change Type |
+|------|------------|
+| `python_backend/app.py` | Major refactor (framework swap) |
+| `python_backend/requirements.txt` | Dependency swap (PyTorch to TensorFlow) |
+| `python_backend/README.md` | Documentation update |
+| `src/components/landing/HeroSection.tsx` | Text update (1 line) |
+| `src/components/analysis/ImageUploader.tsx` | Text update (1 line) |

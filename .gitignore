@@ -26,6 +26,7 @@ dist-ssr
 python_backend/venv/
 python_backend/models/best_enhanced_vit.pth
 python_backend/models/best_enhanced_vit_old.pth
+python_backend/models/fine_tuned_eye_model.keras
 release
 dist
 dist-electron

@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Calendar, Eye, Stethoscope, FileText, Printer } from 'lucide-react';
+import { generateReport } from '@/utils/generateReport';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { AnalysisResult } from '@/components/analysis/AnalysisResult';
 import { DoctorReviewForm } from '@/components/analysis/DoctorReviewForm';
@@ -39,7 +40,7 @@ export default function DetectionDetail() {
   };
 
   const handlePrint = () => {
-    window.print();
+    generateReport(detection);
   };
 
   return (

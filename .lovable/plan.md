@@ -1,34 +1,35 @@
 
 
-# Fix: Update Image Preprocessing to Match Model's Expected Input Shape
+# Plan: Switch to New Keras Model
 
-## Problem
+## Overview
 
-The EfficientNetV2-S model (`efficientnetv2_s_eye_model.h5`) was trained with **256x256** input images, but the backend is currently resizing images to **224x224**. This causes a shape mismatch error:
+Update the Python backend to use the new model file `fine_tuned_eye_model.keras` instead of `efficientnetv2_s_eye_model.h5`. This requires only changing the model file path -- the `.keras` format is natively supported by `tf.keras.models.load_model()` so no other code changes are needed.
 
-```
-expected shape=(None, 256, 256, 3), found shape=(1, 224, 224, 3)
-```
+## Changes
 
-## Fix
+### 1. `python_backend/app.py`
 
-A single-line change in `python_backend/app.py`:
-
-**Line 94** -- change `(224, 224)` to `(256, 256)`:
+**Line 30** -- Update `MODEL_PATH` to point to the new file:
 
 ```python
 # Before
-image = image.resize((224, 224))
+MODEL_PATH = os.path.join(os.path.dirname(__file__), 'models', 'efficientnetv2_s_eye_model.h5')
 
 # After
-image = image.resize((256, 256))
+MODEL_PATH = os.path.join(os.path.dirname(__file__), 'models', 'fine_tuned_eye_model.keras')
 ```
 
-## File to Modify
+**Note:** The input size (256x256) and preprocessing will remain the same. If the new model was trained with a different input size, we may need to adjust `preprocess_image()` after testing. The `.keras` format works with the same `tf.keras.models.load_model()` call already in the code.
 
-| File | Change |
-|------|--------|
-| `python_backend/app.py` | Line 94: Change resize dimensions from `(224, 224)` to `(256, 256)` |
+## What Stays the Same
 
-That is the only change needed. The rest of the inference pipeline (preprocessing, prediction, response format) remains the same.
+- Model loading function (`load_model`) -- `tf.keras.models.load_model()` handles both `.h5` and `.keras` formats
+- Preprocessing pipeline (256x256 resize, EfficientNetV2 preprocess_input)
+- API endpoints and response format
+- All frontend code
+
+## After Implementation
+
+Restart your Flask server and test `/predict` with a fundus image. If you see a shape mismatch error, the new model may expect a different input size, and we will adjust accordingly.
 

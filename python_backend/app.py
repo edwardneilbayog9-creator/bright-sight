@@ -28,7 +28,7 @@ CLASSES = ['cataract', 'diabetic_retinopathy', 'glaucoma', 'normal']
 NUM_CLASSES = len(CLASSES)
 
 # Model path
-MODEL_PATH = os.path.join(os.path.dirname(__file__), 'models', 'efficientnetv2_s_eye_model.h5')
+MODEL_PATH = os.path.join(os.path.dirname(__file__), 'models', 'fine_tuned_eye_model.keras')
 
 # Global model variable
 model = None

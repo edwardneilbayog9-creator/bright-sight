@@ -19,8 +19,8 @@
   },
   "main": "dist-electron/main.js",
   "build": {
-    "appId": "com.brightsight.guide",
-    "productName": "BrightSight",
+    "appId": "com.brightedge.guide",
+    "productName": "BrightEdge",
     "linux": {
       "target": [
         "deb"

@@ -1,4 +1,4 @@
-// SQL Schema for the BrightSight application
+// SQL Schema for the BrightEdge application
 export const SCHEMA_SQL = `
 -- Users table
 CREATE TABLE IF NOT EXISTS users (

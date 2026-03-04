@@ -84,7 +84,7 @@ export function LoginForm() {
       if (success) {
         toast({
           title: 'Account created!',
-          description: 'Welcome to BrightSight.',
+          description: 'Welcome to BrightEdge.',
         });
         navigate('/dashboard');
       } else {
@@ -110,10 +110,10 @@ export function LoginForm() {
       <Card className="w-full max-w-md medical-shadow-lg animate-fade-in">
         <CardHeader className="text-center pb-2">
           <CardTitle className="text-2xl font-bold text-foreground">
-            BrightSight
+            BrightEdge
           </CardTitle>
           <CardDescription>
-            Eye Disease Detection System
+            Sharper insight. Smarter Care.
           </CardDescription>
         </CardHeader>
         <CardContent>

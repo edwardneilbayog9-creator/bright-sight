@@ -27,7 +27,7 @@ function createWindow() {
       contextIsolation: true,
     },
     icon: path.join(__dirname, '../dist/favicon.ico'),
-    title: 'BrightSight - Eye Disease Detection',
+    title: 'BrightEdge - Eye Disease Detection',
     
     // 4. Hide the menu bar to save vertical space on small screens
     autoHideMenuBar: true, 

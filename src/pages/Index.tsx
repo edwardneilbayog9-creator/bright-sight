@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ScanEye, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import brightedgeLogo from '@/assets/brightedge-logo.png';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -30,11 +31,11 @@ const Index = () => {
           {/* Logo */}
           <div className="flex items-center gap-3 mb-6 sm:mb-8">
             <div className="p-2 sm:p-3 rounded-xl bg-secondary/20 backdrop-blur-sm">
-              <ScanEye className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-secondary" strokeWidth={1.5} />
+              <img src={brightedgeLogo} alt="BrightEdge logo" className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">BrightSight</h1>
-              <p className="text-xs sm:text-sm text-white/70">Eye Disease Detection</p>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">BrightEdge</h1>
+              <p className="text-xs sm:text-sm text-white/70">Sharper insight. Smarter Care.</p>
             </div>
           </div>
 
@@ -92,7 +93,7 @@ const Index = () => {
 
             <div className="pt-4 sm:pt-6 border-t border-border">
               <p className="text-xs sm:text-sm text-muted-foreground">
-                BrightSight is a desktop application designed for medical professionals to assist in eye disease screening and diagnosis.
+                BrightEdge is a desktop application designed for medical professionals to assist in eye disease screening and diagnosis.
               </p>
             </div>
           </div>

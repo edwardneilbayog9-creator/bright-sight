@@ -1,4 +1,5 @@
-import { Eye, Shield, Activity, Microscope, ScanEye } from 'lucide-react';
+import { Eye, Shield, Activity, Microscope } from 'lucide-react';
+import brightedgeLogo from '@/assets/brightedge-logo.png';
 
 export function HeroSection() {
   return (
@@ -23,15 +24,15 @@ export function HeroSection() {
           <div className="relative">
             <div className="absolute inset-0 bg-secondary/30 rounded-2xl blur-xl animate-pulse-soft" />
             <div className="relative p-4 rounded-2xl bg-gradient-to-br from-secondary/30 to-primary-foreground/10 backdrop-blur-sm border border-secondary/30">
-              <ScanEye className="w-12 h-12 text-secondary" strokeWidth={1.5} />
+              <img src={brightedgeLogo} alt="BrightEdge logo" className="w-12 h-12 object-contain" />
             </div>
           </div>
           <div>
             <span className="text-primary-foreground font-bold text-2xl tracking-tight">
-              BrightSight
+              BrightEdge
             </span>
             <span className="block text-secondary/80 text-sm font-medium tracking-wide">
-              Vision Intelligence
+              Sharper insight. Smarter Care.
             </span>
           </div>
         </div>

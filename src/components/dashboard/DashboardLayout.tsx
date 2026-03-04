@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  Eye, 
   LayoutDashboard, 
   Upload, 
   History, 
@@ -13,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
+import brightedgeLogo from '@/assets/brightedge-logo.png';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -44,11 +44,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="p-6 border-b border-sidebar-border">
           <Link to="/dashboard" className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-sidebar-primary">
-              <Eye className="w-6 h-6 text-sidebar-primary-foreground" />
+              <img src={brightedgeLogo} alt="BrightEdge logo" className="w-6 h-6 object-contain" />
             </div>
             <div>
-              <h1 className="font-bold text-sidebar-foreground">BrightSight</h1>
-              <p className="text-xs text-sidebar-foreground/60">Eye Disease Detection</p>
+              <h1 className="font-bold text-sidebar-foreground">BrightEdge</h1>
+              <p className="text-xs text-sidebar-foreground/60">Sharper insight. Smarter Care.</p>
             </div>
           </Link>
         </div>

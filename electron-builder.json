@@ -1,7 +1,7 @@
 {
-  "appId": "com.brightsight.app",
-  "productName": "BrightSight",
-  "copyright": "Copyright © 2025 BrightSight",
+  "appId": "com.brightedge.app",
+  "productName": "BrightEdge",
+  "copyright": "Copyright © 2025 BrightEdge",
   "directories": {
     "output": "release",
     "buildResources": "build"

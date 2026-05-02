@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ClipboardList, Eye, AlertTriangle, Clock, AlertCircle, ArrowUpRight } from 'lucide-react';
+import { ClipboardList, Eye, AlertTriangle, Clock, ArrowUpRight } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,8 +19,8 @@ export default function ReviewQueue() {
     .filter(d => d.status === 'analyzed')
     .filter(d => urgencyFilter === 'all' || d.reviewUrgency === urgencyFilter)
     .sort((a, b) => {
-      // Sort by urgency first (urgent > priority > routine), then by date
-      const urgencyOrder = { urgent: 0, priority: 1, routine: 2 };
+      // Sort by urgency first (urgent > routine), then by date
+      const urgencyOrder = { urgent: 0, routine: 1 };
       const aUrgency = urgencyOrder[a.reviewUrgency || 'routine'];
       const bUrgency = urgencyOrder[b.reviewUrgency || 'routine'];
       if (aUrgency !== bUrgency) return aUrgency - bUrgency;
@@ -28,13 +28,11 @@ export default function ReviewQueue() {
     });
 
   const urgentCount = detections.filter(d => d.status === 'analyzed' && d.reviewUrgency === 'urgent').length;
-  const priorityCount = detections.filter(d => d.status === 'analyzed' && d.reviewUrgency === 'priority').length;
-  const routineCount = detections.filter(d => d.status === 'analyzed' && d.reviewUrgency === 'routine').length;
+  const routineCount = detections.filter(d => d.status === 'analyzed' && d.reviewUrgency !== 'urgent').length;
 
   const getUrgencyBadge = (urgency: Detection['reviewUrgency']) => {
     const config = {
       urgent: { label: 'Urgent', className: 'bg-destructive/20 text-destructive border-destructive/30' },
-      priority: { label: 'Priority', className: 'bg-warning/20 text-warning border-warning/30' },
       routine: { label: 'Routine', className: 'bg-muted text-muted-foreground border-muted' },
     };
     const { label, className } = config[urgency || 'routine'];
@@ -45,8 +43,6 @@ export default function ReviewQueue() {
     switch (urgency) {
       case 'urgent':
         return <AlertTriangle className="w-4 h-4 text-destructive" />;
-      case 'priority':
-        return <AlertCircle className="w-4 h-4 text-warning" />;
       default:
         return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
@@ -69,7 +65,7 @@ export default function ReviewQueue() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className={cn(
             'medical-shadow cursor-pointer transition-all hover:ring-2 hover:ring-destructive/50',
             urgencyFilter === 'urgent' && 'ring-2 ring-destructive'
@@ -81,21 +77,6 @@ export default function ReviewQueue() {
               <div>
                 <p className="text-2xl font-bold text-destructive">{urgentCount}</p>
                 <p className="text-sm text-muted-foreground">Urgent Reviews</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className={cn(
-            'medical-shadow cursor-pointer transition-all hover:ring-2 hover:ring-warning/50',
-            urgencyFilter === 'priority' && 'ring-2 ring-warning'
-          )} onClick={() => setUrgencyFilter(urgencyFilter === 'priority' ? 'all' : 'priority')}>
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-warning/10">
-                <AlertCircle className="w-6 h-6 text-warning" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-warning">{priorityCount}</p>
-                <p className="text-sm text-muted-foreground">Priority Reviews</p>
               </div>
             </CardContent>
           </Card>
@@ -128,7 +109,6 @@ export default function ReviewQueue() {
             <SelectContent>
               <SelectItem value="all">All Urgency</SelectItem>
               <SelectItem value="urgent">Urgent Only</SelectItem>
-              <SelectItem value="priority">Priority Only</SelectItem>
               <SelectItem value="routine">Routine Only</SelectItem>
             </SelectContent>
           </Select>
@@ -166,8 +146,7 @@ export default function ReviewQueue() {
                     key={detection.id}
                     className={cn(
                       'flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors',
-                      detection.reviewUrgency === 'urgent' && 'border-l-4 border-l-destructive',
-                      detection.reviewUrgency === 'priority' && 'border-l-4 border-l-warning'
+                      detection.reviewUrgency === 'urgent' && 'border-l-4 border-l-destructive'
                     )}
                   >
                     <div className="flex items-center gap-4">

@@ -24,7 +24,7 @@ interface AnalysisResultData {
   confidence: number;
   allProbabilities: Record<DiseaseType, number>;
   preliminaryFindings: PreliminaryFinding[];
-  reviewUrgency: 'routine' | 'priority' | 'urgent';
+  reviewUrgency: 'routine' | 'urgent';
 }
 
 export default function Analyze() {
@@ -62,16 +62,11 @@ export default function Analyze() {
     }));
   };
 
-  const getReviewUrgency = (classification: DiseaseType, confidence: number): 'routine' | 'priority' | 'urgent' => {
+  const getReviewUrgency = (classification: DiseaseType, confidence: number): 'routine' | 'urgent' => {
     if (classification === 'normal') return 'routine';
-    
-    if (confidence >= 0.85) {
-      if (classification === 'diabetic_retinopathy' || classification === 'glaucoma') {
-        return 'urgent';
-      }
-      return 'priority';
-    } else if (confidence >= 0.70) {
-      return 'priority';
+
+    if (confidence >= 0.85 && (classification === 'diabetic_retinopathy' || classification === 'glaucoma')) {
+      return 'urgent';
     }
     return 'routine';
   };

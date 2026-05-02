@@ -99,18 +99,14 @@ def preprocess_image(image: Image.Image) -> np.ndarray:
 
 
 def get_review_urgency(classification: str, confidence: float) -> str:
-    """Determine review urgency based on classification and confidence"""
+    """Determine review urgency based on classification and confidence.
+    Only two levels are supported: 'urgent' and 'routine'."""
     if classification == 'normal':
         return 'routine'
 
-    if confidence >= 0.85:
-        if classification in ['diabetic_retinopathy', 'glaucoma']:
-            return 'urgent'
-        return 'priority'
-    elif confidence >= 0.70:
-        return 'priority'
-    else:
-        return 'routine'
+    if confidence >= 0.85 and classification in ['diabetic_retinopathy', 'glaucoma']:
+        return 'urgent'
+    return 'routine'
 
 
 def predict_image(image: Image.Image) -> dict:

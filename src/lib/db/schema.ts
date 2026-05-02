@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS detections (
   status TEXT CHECK(status IN ('pending', 'analyzed', 'reviewed')) DEFAULT 'pending',
   preliminary_findings TEXT,
   all_probabilities TEXT,
-  review_urgency TEXT CHECK(review_urgency IN ('routine', 'priority', 'urgent', NULL)),
+  review_urgency TEXT CHECK(review_urgency IN ('routine', 'urgent', NULL)),
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id)

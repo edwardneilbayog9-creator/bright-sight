@@ -28,7 +28,7 @@ export interface Detection {
   status: 'pending' | 'analyzed' | 'reviewed';
   preliminaryFindings?: PreliminaryFinding[];
   allProbabilities?: Record<DiseaseType, number>;
-  reviewUrgency?: 'routine' | 'priority' | 'urgent';
+  reviewUrgency?: 'routine' | 'urgent';
   createdAt: string;
   updatedAt: string;
 }

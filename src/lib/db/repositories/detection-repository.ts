@@ -228,7 +228,7 @@ export class DetectionRepository {
       allProbabilities: row.all_probabilities
         ? JSON.parse(row.all_probabilities) as Record<DiseaseType, number>
         : undefined,
-      reviewUrgency: row.review_urgency as 'routine' | 'priority' | 'urgent' | undefined,
+      reviewUrgency: (row.review_urgency === 'priority' ? 'routine' : row.review_urgency) as 'routine' | 'urgent' | undefined,
       doctorReview: null,
       createdAt: row.created_at,
       updatedAt: row.updated_at,

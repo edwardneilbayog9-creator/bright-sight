@@ -101,7 +101,6 @@ export function PreliminaryFindings({
       <Card className={cn(
         "medical-shadow border-l-4",
         reviewUrgency === 'urgent' && "border-l-destructive",
-        reviewUrgency === 'priority' && "border-l-warning",
         reviewUrgency === 'routine' && "border-l-success"
       )}>
         <CardHeader>

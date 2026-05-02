@@ -44,8 +44,7 @@ export function generateReport(detection: Detection) {
     : 'Routine';
 
   const urgencyColor =
-    detection.reviewUrgency === 'urgent' ? '#c0392b' :
-    detection.reviewUrgency === 'priority' ? '#e67e22' : '#27ae60';
+    detection.reviewUrgency === 'urgent' ? '#c0392b' : '#27ae60';
 
   const findingsRows = (detection.preliminaryFindings || [])
     .map((f, i) => `
@@ -195,9 +194,9 @@ export function generateReport(detection: Detection) {
     <div style="padding:12px 16px;border-radius:4px;border-left:4px solid ${urgencyColor};background:#fafafa;">
       <span style="font-weight:700;color:${urgencyColor};font-size:15px;">${urgencyLabel}</span>
       <span style="color:#555;margin-left:8px;">
-        ${detection.reviewUrgency === 'urgent' ? '— Schedule immediate specialist consultation.' :
-          detection.reviewUrgency === 'priority' ? '— Follow-up recommended within 1–2 weeks.' :
-          '— Continue routine monitoring as scheduled.'}
+        ${detection.reviewUrgency === 'urgent'
+          ? '— Schedule immediate specialist consultation.'
+          : '— Continue routine monitoring as scheduled.'}
       </span>
     </div>
   </div>

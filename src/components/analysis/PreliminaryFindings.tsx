@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle, AlertTriangle, Clock, Stethoscope } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertTriangle, Stethoscope } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -8,7 +8,7 @@ interface PreliminaryFindingsProps {
   classification: DiseaseType;
   confidence: number;
   findings: PreliminaryFinding[];
-  reviewUrgency: 'routine' | 'priority' | 'urgent';
+  reviewUrgency: 'routine' | 'urgent';
 }
 
 export function PreliminaryFindings({ 
@@ -25,13 +25,6 @@ export function PreliminaryFindings({
           color: 'bg-destructive text-destructive-foreground',
           icon: AlertTriangle,
           description: 'Findings suggest significant pathology. Immediate ophthalmologist consultation recommended.',
-        };
-      case 'priority':
-        return {
-          label: 'Priority Review',
-          color: 'bg-warning text-warning-foreground',
-          icon: Clock,
-          description: 'Abnormalities detected. Schedule ophthalmologist review within 1-2 weeks.',
         };
       default:
         return {
@@ -117,7 +110,6 @@ export function PreliminaryFindings({
               <UrgencyIcon className={cn(
                 "w-5 h-5",
                 reviewUrgency === 'urgent' && "text-destructive",
-                reviewUrgency === 'priority' && "text-warning",
                 reviewUrgency === 'routine' && "text-success"
               )} />
               Ophthalmologist Review Recommendation
@@ -149,22 +141,6 @@ export function PreliminaryFindings({
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
                       Consider additional imaging if available
-                    </li>
-                  </>
-                )}
-                {reviewUrgency === 'priority' && (
-                  <>
-                    <li className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-warning" />
-                      Schedule ophthalmologist appointment within 1-2 weeks
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-warning" />
-                      Monitor for any symptom changes
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-warning" />
-                      Document current visual acuity
                     </li>
                   </>
                 )}

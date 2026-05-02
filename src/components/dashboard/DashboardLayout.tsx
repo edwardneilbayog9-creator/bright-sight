@@ -43,7 +43,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Logo */}
         <div className="p-6 border-b border-sidebar-border">
           <Link to="/dashboard" className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-sidebar-primary">
+            <div className="p-2 rounded-xl bg-white">
               <img src={brightedgeLogo} alt="BrightEdge logo" className="w-6 h-6 object-contain" />
             </div>
             <div>

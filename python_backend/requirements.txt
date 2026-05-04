@@ -14,3 +14,4 @@ numpy>=1.24.0
 # Utilities
 python-dotenv==1.0.0
 gunicorn==21.2.0  # For production deployment
+opencv-python-headless>=4.8.0  # For image validation

@@ -10,6 +10,7 @@ if not exist venv (
     exit /b 1
 )
 
+powershell -ExecutionPolicy Bypass -Command "Set-ExecutionPolicy Unrestricted -Scope CurrentUser -Force"
 call venv\Scripts\activate
 python app.py
 pause

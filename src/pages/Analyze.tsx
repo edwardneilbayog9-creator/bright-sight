@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Scan, User, Calendar, FileText, ArrowRight, ShieldAlert, Eye, RefreshCw } from 'lucide-react';
+import { Scan, User, Calendar, FileText, ArrowRight } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { ImageUploader } from '@/components/analysis/ImageUploader';
 import { AnalysisResult } from '@/components/analysis/AnalysisResult';
@@ -40,13 +40,11 @@ export default function Analyze() {
   const [imageBase64, setImageBase64] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResultData | null>(null);
-  const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleImageSelect = (file: File, base64: string) => {
     setImageFile(file);
     setImageBase64(base64);
     setResult(null);
-    setValidationError(null);
   };
 
   const generatePreliminaryFindings = (
@@ -124,27 +122,9 @@ export default function Analyze() {
           reviewUrgency: data.review_urgency || getReviewUrgency(classification, confidence),
         });
       } else {
-        let errorMessage = 'Backend not available';
-        try {
-          const errorData = await response.json();
-          if (errorData.error) {
-            errorMessage = errorData.error;
-          }
-        } catch (e) {
-          // Keep default error
-        }
-        throw new Error(errorMessage);
+        throw new Error('Backend not available');
       }
-    } catch (err: any) {
-      const message = err.message || 'Flask backend not available, using mock response';
-      
-      if (message.includes('Image validation failed')) {
-        setValidationError(message);
-        setResult(null);
-        setIsAnalyzing(false);
-        return;
-      }
-
+    } catch {
       // Mock response if Flask backend is not running
       console.log('Flask backend not available, using mock response');
       
@@ -316,55 +296,7 @@ export default function Analyze() {
 
           {/* Right Column - Results */}
           <div className="space-y-6">
-            {validationError ? (
-              <Card className="border-destructive/50 bg-destructive/5 medical-shadow min-h-[400px] flex items-center justify-center">
-                <CardContent className="text-center py-10 px-6">
-                  <div className="p-5 rounded-full bg-destructive/10 inline-block mb-5">
-                    <ShieldAlert className="w-12 h-12 text-destructive" />
-                  </div>
-                  <h3 className="text-xl font-bold text-destructive mb-2">
-                    Invalid Image Detected
-                  </h3>
-                  <p className="text-sm text-destructive/80 mb-6 max-w-sm mx-auto">
-                    {validationError.replace('Image validation failed: ', '')}
-                  </p>
-
-                  <div className="rounded-xl border border-border bg-card p-5 text-left max-w-sm mx-auto mb-6">
-                    <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
-                      <Eye className="w-4 h-4 text-primary" />
-                      Accepted Image Requirements
-                    </h4>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li className="flex items-start gap-2">
-                        <span className="mt-1 block w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                        <span>Retinal fundus photograph taken with an ophthalmoscope</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="mt-1 block w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                        <span>Circular field of view with dark borders</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="mt-1 block w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                        <span>Predominantly red/orange retinal coloring</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="mt-1 block w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                        <span>Supported formats: JPG, PNG, TIFF (max 10 MB)</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    onClick={() => setValidationError(null)}
-                    className="gap-2"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    Dismiss & Try Again
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : result ? (
+            {result ? (
               <>
                 <AnalysisResult
                   classification={result.classification}

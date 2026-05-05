@@ -85,73 +85,6 @@ def load_model():
         return False
 
 
-def is_fundus_image_opencv(image: Image.Image) -> tuple[bool, str]:
-    """
-    Uses OpenCV heuristics to determine if an image is likely a fundus image.
-    Returns (True, "") if it passes, or (False, "reason") if it fails.
-    """
-    try:
-        import cv2
-    except ImportError:
-        print("Warning: cv2 not installed, bypassing OpenCV validation.")
-        return True, ""
-
-    try:
-        # Convert PIL to OpenCV format (BGR)
-        cv_img = cv2.cvtColor(np.array(image.convert('RGB')), cv2.COLOR_RGB2BGR)
-        
-        # Resize to standard size for faster/consistent processing
-        cv_img = cv2.resize(cv_img, (512, 512))
-        
-        # Check 1: Red channel dominance
-        # Fundus images are typically heavily red/orange
-        b, g, r = cv2.split(cv_img)
-        mean_r = np.mean(r)
-        mean_g = np.mean(g)
-        mean_b = np.mean(b)
-        
-        # In a typical fundus image, Red is significantly higher than Blue
-        if mean_r < mean_b or mean_r < mean_g - 25: 
-            return False, "Color profile does not match a typical fundus image."
-            
-        # Check 2: Circular Field of View (FOV)
-        gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
-        
-        # Apply a threshold to isolate the illuminated FOV
-        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        
-        # Find contours
-        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
-        if not contours:
-            return False, "Could not detect a clear field of view."
-            
-        # Get the largest contour
-        largest_contour = max(contours, key=cv2.contourArea)
-        area = cv2.contourArea(largest_contour)
-        
-        total_area = 512 * 512
-        if area < total_area * 0.10:
-            return False, "Illuminated area is too small."
-            
-        # Check circularity
-        perimeter = cv2.arcLength(largest_contour, True)
-        if perimeter == 0:
-            return False, "Invalid shape detected."
-            
-        circularity = 4 * np.pi * (area / (perimeter * perimeter))
-        
-        # A perfect circle has circularity of 1. Fundus FOV is usually > 0.6
-        if circularity < 0.35:
-            return False, "Shape is not circular enough."
-        
-        return True, ""
-        
-    except Exception as e:
-        print(f"OpenCV validation error: {e}")
-        return True, ""
-
-
 def preprocess_image(image: Image.Image) -> np.ndarray:
     """Preprocess a fundus image for EfficientNetV2-S inference"""
     from tensorflow.keras.applications.efficientnet_v2 import preprocess_input
@@ -256,11 +189,6 @@ def predict():
         # Read and process image
         image_bytes = file.read()
         image = Image.open(io.BytesIO(image_bytes))
-
-        # Validate image using OpenCV heuristics
-        is_fundus, reason = is_fundus_image_opencv(image)
-        if not is_fundus:
-            return jsonify({'error': f'Image validation failed: {reason} Please upload a clear fundus image.'}), 400
 
         # Run prediction
         result = predict_image(image)

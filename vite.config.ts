@@ -5,6 +5,7 @@ import electron from "vite-plugin-electron"
 import { builtinModules } from "module" // <--- Import strictly here
 
 export default defineConfig({
+  base: './',
   plugins: [
     react(),
     electron({

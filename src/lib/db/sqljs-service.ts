@@ -1,4 +1,5 @@
 import initSqlJs, { Database } from 'sql.js';
+import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 import { IDatabaseService } from './interfaces';
 import { SCHEMA_SQL, DEFAULT_DOCTOR } from './schema';
 
@@ -11,9 +12,9 @@ export class SqlJsService implements IDatabaseService {
   async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    // Load sql.js WASM from CDN
+    // Load sql.js WASM locally using Vite asset import
     const SQL = await initSqlJs({
-      locateFile: (file) => `https://sql.js.org/dist/${file}`,
+      locateFile: () => sqlWasmUrl,
     });
 
     // Try to load existing database from localStorage
